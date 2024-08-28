@@ -1,0 +1,62 @@
+<!-- tecnologia/templates/tecnologia/lista_productos.html -->
+{% extends 'tecnologia/base.html' %}
+
+{% block title %}Lista de Productos{% endblock %}
+
+{% block content %}
+<h1>Lista de Productos</h1>
+<div class="row">
+    {% for producto in productos %}
+    <div class="col-md-4">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">{{ producto.descripcion }}</h5>
+                <p class="card-text">Código: {{ producto.codigo }}</p>
+                <p class="card-text">Precio: ${{ producto.precio }}</p>
+                <p class="card-text">Tipo: {{ producto.tipo|title }}</p>
+                <form method="POST" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="producto_id" value="{{ producto.id }}">
+                    <button type="submit" class="btn btn-primary">
+                        {% if producto.seleccionado %}Quitar del Carrito{% else %}Agregar al Carrito{% endif %}
+                    </button>
+                </form>
+                <button class="btn btn-danger btn-sm btn-eliminar" data-id="{{ producto.id }}">Eliminar</button>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <p>No hay productos disponibles.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+    document.querySelectorAll('.btn-eliminar').forEach(function(button) {
+        button.addEventListener('click', function() {
+            var id = this.getAttribute('data-id');
+            if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+                fetch('/eliminar/' + id + '/', {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Producto eliminado exitosamente');
+                        location.reload();
+                    } else {
+                        alert('Error al eliminar el producto');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        });
+    });
+</script>
+{% endblock %}
